@@ -4,6 +4,8 @@ La web ahora requiere el servidor Node.js y PostgreSQL. Abrir el HTML directamen
 
 Las cartas y los mensajes de bienvenida y cierre conservan la estética retro de la máquina: ilustraciones en pixel art integradas en el HTML, tipografía monoespaciada y colores neón. El texto se desliza dentro de cada tarjeta y las acciones quedan fijas. La carpeta `assets/plants` conserva las fotografías de la variante anterior y sus licencias, pero las cartas actuales usan las ilustraciones integradas.
 
+La bienvenida y el cierre se presentan como conversaciones con Barto en una playa pixelada. El texto aparece progresivamente; tocar el cuadro o el botón completa la frase y el siguiente toque avanza. La preferencia del dispositivo de reducir movimiento muestra cada frase de inmediato.
+
 ## Qué garantiza el sorteo
 
 - Hay una sola asignación compartida por todos los celulares.
