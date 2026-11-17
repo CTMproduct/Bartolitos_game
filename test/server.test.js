@@ -1,7 +1,21 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { once } from 'node:events';
-import { createApp } from '../server.js';
+import { createApp, loadGameHtml } from '../server.js';
+
+test('loads index.html, supports previous filenames, and reports a missing page', async () => {
+  const actual = await loadGameHtml();
+  assert.match(actual.toString(), /<!doctype html>/i);
+  for (const filename of ['index.html', 'Bartolitos.html', 'Bartolitos (1).html']) {
+    const html = await loadGameHtml(async url => {
+      if (decodeURIComponent(url.pathname).endsWith('/' + filename)) return '<h1>Game</h1>';
+      throw Object.assign(new Error(), { code: 'ENOENT' });
+    });
+    assert.equal(html, '<h1>Game</h1>');
+  }
+  await assert.rejects(loadGameHtml(async () => { throw Object.assign(new Error(), { code: 'ENOENT' }); }), { code: 'MISSING_GAME_HTML' });
+  await assert.rejects(loadGameHtml(async () => { throw Object.assign(new Error(), { code: 'EACCES' }); }), { code: 'EACCES' });
+});
 
 test('API repeats the stored assignment across concurrent requests and validates inputs', async () => {
   const participants = [{ id: 1, name: 'Ana' }, { id: 2, name: 'Juan' }];

@@ -4,6 +4,17 @@ import { pathToFileURL } from 'node:url';
 import { createPool, findRecipient } from './database.js';
 import { describeStartupError, initializeWithRetry } from './startup.js';
 
+export async function loadGameHtml(read = readFile) {
+  for (const filename of ['index.html', 'Bartolitos.html', 'Bartolitos (1).html']) {
+    try {
+      return await read(new URL(filename, import.meta.url));
+    } catch (error) {
+      if (error.code !== 'ENOENT') throw error;
+    }
+  }
+  throw Object.assign(new Error('No se encontró la página del juego.'), { code: 'MISSING_GAME_HTML' });
+}
+
 export function createApp({ pool, participants, html }) {
   const allowedIds = new Set(participants.map(p => p.id));
   return createServer(async (request, response) => {
@@ -15,7 +26,7 @@ export function createApp({ pool, participants, html }) {
     };
     try {
       const path = new URL(request.url, 'http://localhost').pathname;
-      if (request.method === 'GET' && ['/', '/Bartolitos.html', '/Bartolitos%20(1).html'].includes(path)) {
+      if (request.method === 'GET' && ['/', '/index.html', '/Bartolitos.html', '/Bartolitos%20(1).html'].includes(path)) {
         response.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
         response.end(html);
       } else if (request.method === 'GET' && path === '/health') {
@@ -51,7 +62,7 @@ export function createApp({ pool, participants, html }) {
 
 async function start() {
   const participants = JSON.parse(await readFile(new URL('./participants.json', import.meta.url), 'utf8'));
-  const html = await readFile(new URL('./Bartolitos.html', import.meta.url));
+  const html = await loadGameHtml();
   const pool = createPool(process.env.DATABASE_URL);
   pool.on('error', () => console.error('Conexión PostgreSQL interrumpida.'));
   try {

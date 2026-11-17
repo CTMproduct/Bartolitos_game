@@ -23,6 +23,7 @@ const messages = {
   '42501': 'El usuario PostgreSQL no tiene permisos para preparar las tablas del sorteo.',
   PARTICIPANTS_CHANGED: 'participants.json no coincide con las personas guardadas. Se conserva el sorteo; revisa la lista sin borrar la base.',
   INCOMPLETE_DRAW: 'El sorteo guardado está incompleto. No se modificaron asignaciones; requiere revisión.',
+  MISSING_GAME_HTML: 'Falta la página del juego. Incluye index.html (o Bartolitos.html) junto a server.js en el repositorio.',
   ENOENT: 'Falta un archivo del proyecto. Incluye participants.json y Bartolitos.html en el repositorio y revisa Root Directory.',
   EADDRINUSE: 'El puerto de la aplicación ya está ocupado.',
   DEPTH_ZERO_SELF_SIGNED_CERT: 'Falló la validación TLS de PostgreSQL. Revisa la conexión y el certificado del servicio.',
@@ -33,6 +34,9 @@ const transient = new Set(['ECONNREFUSED', 'ENOTFOUND', 'EAI_AGAIN', 'ETIMEDOUT'
 // Only known, fixed messages are logged: driver errors can contain credentials or URLs.
 export function describeStartupError(error) {
   const code = errorCode(error);
+  if (code === 'ENOENT' && /(?:^|[\\/])participants\.json$/.test(String(error.path ?? ''))) {
+    return '[ENOENT] Falta participants.json junto a server.js. Sube ese archivo al repositorio.';
+  }
   if (messages[code]) return `[${code}] ${messages[code]}`;
   if (error instanceof SyntaxError) return '[INVALID_JSON] Revisa que participants.json sea JSON válido.';
   return '[STARTUP_ERROR] Error inesperado al preparar el servidor. Revisa los archivos y la configuración del despliegue.';
