@@ -1,0 +1,13 @@
+{
+  "name": "bartolitos-arcade",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "engines": { "node": ">=22" },
+  "scripts": {
+    "start": "node --env-file-if-exists=.env server.js",
+    "test": "node --test",
+    "test:db": "node --env-file-if-exists=.env --test test/database.integration.js"
+  },
+  "dependencies": { "pg": "^8.16.3" }
+}

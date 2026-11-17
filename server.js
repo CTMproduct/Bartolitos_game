@@ -1,0 +1,75 @@
+import { createServer } from 'node:http';
+import { readFile } from 'node:fs/promises';
+import { pathToFileURL } from 'node:url';
+import { createPool, initializeDatabase, findRecipient } from './database.js';
+
+export function createApp({ pool, participants, html }) {
+  const allowedIds = new Set(participants.map(p => p.id));
+  return createServer(async (request, response) => {
+    response.setHeader('X-Content-Type-Options', 'nosniff');
+    response.setHeader('Cache-Control', 'no-store');
+    const send = (status, value) => {
+      response.writeHead(status, { 'Content-Type': 'application/json; charset=utf-8' });
+      response.end(JSON.stringify(value));
+    };
+    try {
+      const path = new URL(request.url, 'http://localhost').pathname;
+      if (request.method === 'GET' && ['/', '/Bartolitos.html', '/Bartolitos%20(1).html'].includes(path)) {
+        response.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
+        response.end(html);
+      } else if (request.method === 'GET' && path === '/health') {
+        await pool.query('SELECT 1');
+        send(200, { ok: true });
+      } else if (request.method === 'GET' && path === '/api/participants') {
+        send(200, participants);
+      } else if (request.method === 'POST' && path === '/api/draw') {
+        if (!request.headers['content-type']?.startsWith('application/json')) return send(415, { error: 'Se requiere JSON.' });
+        let body = '';
+        for await (const chunk of request) {
+          body += chunk.toString();
+          if (Buffer.byteLength(body) > 1024) return send(413, { error: 'Solicitud demasiado grande.' });
+        }
+        let data;
+        try { data = JSON.parse(body); } catch { return send(400, { error: 'JSON inválido.' }); }
+        if (!Number.isInteger(data?.participantId) || !allowedIds.has(data.participantId)) {
+          return send(400, { error: 'Participante inválido.' });
+        }
+        const recipient = await findRecipient(pool, data.participantId);
+        if (!recipient) return send(503, { error: 'Sorteo no disponible. Reintenta más tarde.' });
+        send(200, { recipient });
+      } else {
+        send(404, { error: 'No encontrado.' });
+      }
+    } catch {
+      console.error('No se pudo atender la solicitud. Comprueba la conexión a PostgreSQL.');
+      if (!response.headersSent) send(503, { error: 'Servicio no disponible. Reintenta más tarde.' });
+      else response.end();
+    }
+  });
+}
+
+async function start() {
+  const participants = JSON.parse(await readFile(new URL('./participants.json', import.meta.url), 'utf8'));
+  const html = await readFile(new URL('./Bartolitos.html', import.meta.url));
+  const pool = createPool(process.env.DATABASE_URL);
+  pool.on('error', () => console.error('Conexión PostgreSQL interrumpida.'));
+  try {
+    await initializeDatabase(pool, participants);
+  } catch (error) {
+    await pool.end();
+    throw error;
+  }
+  const server = createApp({ pool, participants, html });
+  server.listen(Number(process.env.PORT || 3000), '0.0.0.0', () => console.log('Bartolitos listo; sorteo compartido en PostgreSQL.'));
+  for (const signal of ['SIGINT', 'SIGTERM']) process.once(signal, () => {
+    server.close(async () => { await pool.end(); process.exit(0); });
+    setTimeout(() => process.exit(1), 10000).unref();
+  });
+}
+
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+  start().catch(() => {
+    console.error('No se pudo iniciar Bartolitos. Revisa DATABASE_URL y que participants.json coincida con el sorteo guardado.');
+    process.exitCode = 1;
+  });
+}

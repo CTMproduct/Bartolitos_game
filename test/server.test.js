@@ -1,0 +1,34 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { once } from 'node:events';
+import { createApp } from '../server.js';
+
+test('API repeats the stored assignment across concurrent requests and validates inputs', async () => {
+  const participants = [{ id: 1, name: 'Ana' }, { id: 2, name: 'Juan' }];
+  const pool = { async query(sql, params) {
+    if (sql === 'SELECT 1') return { rows: [] };
+    return { rows: params[0] === 1 ? [participants[1]] : [participants[0]] };
+  } };
+  const server = createApp({ pool, participants, html: '<h1>Bartolitos</h1>' });
+  server.listen(0, '127.0.0.1');
+  await once(server, 'listening');
+  const base = `http://127.0.0.1:${server.address().port}`;
+  const draw = body => fetch(base + '/api/draw', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+  try {
+    const results = await Promise.all(Array.from({ length: 40 }, async () => (await draw({ participantId: 1 })).json()));
+    assert.ok(results.every(r => r.recipient.id === 2));
+    assert.equal((await (await draw({ participantId: 2 })).json()).recipient.id, 1);
+    for (const participantId of [null, 99, '1', -1, 1.5]) assert.equal((await draw({ participantId })).status, 400);
+    assert.equal((await fetch(base + '/health')).status, 200);
+    assert.deepEqual(await (await fetch(base + '/api/participants')).json(), participants);
+    assert.equal((await fetch(base)).status, 200);
+    assert.equal((await fetch(base + '/participants.json')).status, 404);
+    assert.equal((await fetch(base + '/.env')).status, 404);
+    assert.equal((await fetch(base + '/api/draw', { method: 'POST', body: 'text' })).status, 415);
+    assert.equal((await draw({ participantId: 1, large: 'a'.repeat(1500) })).status, 413);
+    pool.query = async () => { throw new Error('offline'); };
+    assert.equal((await draw({ participantId: 1 })).status, 503);
+  } finally {
+    await new Promise(resolve => server.close(resolve));
+  }
+});
