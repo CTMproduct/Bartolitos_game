@@ -2,7 +2,13 @@ import pg from 'pg';
 import { makeAssignments } from './draw.js';
 
 export function createPool(connectionString) {
-  if (!connectionString) throw new Error('Configura DATABASE_URL para conectar PostgreSQL.');
+  if (!connectionString?.trim()) throw Object.assign(new Error('Falta DATABASE_URL.'), { code: 'MISSING_DATABASE_URL' });
+  try {
+    const url = new URL(connectionString);
+    if (!['postgres:', 'postgresql:'].includes(url.protocol) || !url.hostname) throw new Error();
+  } catch {
+    throw Object.assign(new Error('DATABASE_URL no tiene formato PostgreSQL.'), { code: 'INVALID_DATABASE_URL' });
+  }
   return new pg.Pool({ connectionString, max: 8, connectionTimeoutMillis: 10000 });
 }
 
@@ -30,7 +36,7 @@ export async function initializeDatabase(pool, participants) {
         await client.query('INSERT INTO bartolitos_participants (id, name) VALUES ($1, $2)', [participant.id, participant.name]);
       }
     } else if (JSON.stringify(existing.rows) !== JSON.stringify([...participants].sort((a, b) => a.id - b.id))) {
-      throw new Error('La lista de participantes cambió. Se conserva el sorteo existente; revisa participants.json.');
+      throw Object.assign(new Error('La lista de participantes cambió.'), { code: 'PARTICIPANTS_CHANGED' });
     }
     const count = await client.query('SELECT count(*)::integer AS total FROM bartolitos_assignments');
     if (count.rows[0].total === 0) {
@@ -38,7 +44,7 @@ export async function initializeDatabase(pool, participants) {
         await client.query('INSERT INTO bartolitos_assignments (giver_id, recipient_id) VALUES ($1, $2)', [assignment.giverId, assignment.recipientId]);
       }
     } else if (count.rows[0].total !== participants.length) {
-      throw new Error('Sorteo incompleto en la base de datos. No se reasignaron destinatarios.');
+      throw Object.assign(new Error('Sorteo incompleto en la base de datos.'), { code: 'INCOMPLETE_DRAW' });
     }
     await client.query('COMMIT');
   } catch (error) {

@@ -1,7 +1,8 @@
 import { createServer } from 'node:http';
 import { readFile } from 'node:fs/promises';
 import { pathToFileURL } from 'node:url';
-import { createPool, initializeDatabase, findRecipient } from './database.js';
+import { createPool, findRecipient } from './database.js';
+import { describeStartupError, initializeWithRetry } from './startup.js';
 
 export function createApp({ pool, participants, html }) {
   const allowedIds = new Set(participants.map(p => p.id));
@@ -54,7 +55,7 @@ async function start() {
   const pool = createPool(process.env.DATABASE_URL);
   pool.on('error', () => console.error('Conexión PostgreSQL interrumpida.'));
   try {
-    await initializeDatabase(pool, participants);
+    await initializeWithRetry(pool, participants);
   } catch (error) {
     await pool.end();
     throw error;
@@ -68,8 +69,8 @@ async function start() {
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
-  start().catch(() => {
-    console.error('No se pudo iniciar Bartolitos. Revisa DATABASE_URL y que participants.json coincida con el sorteo guardado.');
+  start().catch(error => {
+    console.error(`No se pudo iniciar Bartolitos: ${describeStartupError(error)}`);
     process.exitCode = 1;
   });
 }
