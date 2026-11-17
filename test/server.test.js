@@ -38,6 +38,13 @@ test('API repeats the stored assignment across concurrent requests and validates
     assert.equal((await fetch(base)).status, 200);
     assert.equal((await fetch(base + '/participants.json')).status, 404);
     assert.equal((await fetch(base + '/.env')).status, 404);
+    const photo = await fetch(base + '/assets/plants/plant-12.jpg');
+    assert.equal(photo.status, 200);
+    assert.equal(photo.headers.get('content-type'), 'image/jpeg');
+    const imageBytes = new Uint8Array(await photo.arrayBuffer());
+    assert.deepEqual([...imageBytes.slice(0, 2)], [255, 216]);
+    assert.equal((await fetch(base + '/assets/plants/plant-99.jpg')).status, 404);
+    assert.equal((await (await fetch(base + '/assets/plants/credits.json')).json()).length, 13);
     assert.equal((await fetch(base + '/api/draw', { method: 'POST', body: 'text' })).status, 415);
     assert.equal((await draw({ participantId: 1, large: 'a'.repeat(1500) })).status, 413);
     pool.query = async () => { throw new Error('offline'); };

@@ -29,6 +29,19 @@ export function createApp({ pool, participants, html }) {
       if (request.method === 'GET' && ['/', '/index.html', '/Bartolitos.html', '/Bartolitos%20(1).html'].includes(path)) {
         response.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
         response.end(html);
+      } else if (request.method === 'GET' && /^\/assets\/plants\/(?:plant-(?:[0-9]|1[0-2])\.jpg|credits\.json)$/.test(path)) {
+        let asset;
+        try {
+          asset = await readFile(new URL('.' + path, import.meta.url));
+        } catch (error) {
+          if (error.code === 'ENOENT') return send(404, { error: 'Imagen no encontrada.' });
+          throw error;
+        }
+        response.writeHead(200, {
+          'Content-Type': path.endsWith('.jpg') ? 'image/jpeg' : 'application/json; charset=utf-8',
+          'Cache-Control': 'public, max-age=86400'
+        });
+        response.end(asset);
       } else if (request.method === 'GET' && path === '/health') {
         await pool.query('SELECT 1');
         send(200, { ok: true });

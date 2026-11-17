@@ -2,6 +2,8 @@
 
 La web ahora requiere el servidor Node.js y PostgreSQL. Abrir el HTML directamente ya no genera sorteos locales. La página principal puede llamarse `index.html`, `Bartolitos.html` o `Bartolitos (1).html`; el servidor busca en ese orden. Debe estar junto a `server.js` y `participants.json`.
 
+Las cartas y los mensajes de bienvenida y cierre tienen un diseño de lectura independiente de la máquina arcade. Incluye la carpeta **`assets/plants`** en el repositorio: contiene las 13 fotos, guardadas localmente, y `credits.json` con los autores, fuentes y licencias de Wikimedia Commons. Cada carta muestra sus créditos al final. Las imágenes se redujeron y recomprimieron para la web; sus licencias se conservan en el archivo de créditos.
+
 ## Qué garantiza el sorteo
 
 - Hay una sola asignación compartida por todos los celulares.
