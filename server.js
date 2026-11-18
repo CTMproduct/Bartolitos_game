@@ -29,6 +29,14 @@ export function createApp({ pool, participants, html }) {
       if (request.method === 'GET' && ['/', '/index.html', '/Bartolitos.html', '/Bartolitos%20(1).html'].includes(path)) {
         response.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
         response.end(html);
+      } else if (request.method === 'GET' && ['/favicon.ico', '/assets/icon.ico'].includes(path)) {
+        const icon = await readFile(new URL('./assets/icon.ico', import.meta.url));
+        response.writeHead(200, { 'Content-Type': 'image/x-icon', 'Cache-Control': 'public, max-age=86400' });
+        response.end(icon);
+      } else if (request.method === 'GET' && path === '/assets/Playa.png') {
+        const background = await readFile(new URL('./assets/Playa.png', import.meta.url));
+        response.writeHead(200, { 'Content-Type': 'image/png', 'Cache-Control': 'public, max-age=86400' });
+        response.end(background);
       } else if (request.method === 'GET' && /^\/assets\/plants\/(?:plant-(?:[0-9]|1[0-2])\.jpg|credits\.json)$/.test(path)) {
         let asset;
         try {

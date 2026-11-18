@@ -38,6 +38,16 @@ test('API repeats the stored assignment across concurrent requests and validates
     assert.equal((await fetch(base)).status, 200);
     assert.equal((await fetch(base + '/participants.json')).status, 404);
     assert.equal((await fetch(base + '/.env')).status, 404);
+    for (const path of ['/favicon.ico?v=ctm-2', '/assets/icon.ico']) {
+      const icon = await fetch(base + path);
+      assert.equal(icon.status, 200);
+      assert.equal(icon.headers.get('content-type'), 'image/x-icon');
+      assert.deepEqual([...new Uint8Array(await icon.arrayBuffer()).slice(0, 4)], [0, 0, 1, 0]);
+    }
+    const beach = await fetch(base + '/assets/Playa.png');
+    assert.equal(beach.status, 200);
+    assert.equal(beach.headers.get('content-type'), 'image/png');
+    assert.deepEqual([...new Uint8Array(await beach.arrayBuffer()).slice(0, 8)], [137, 80, 78, 71, 13, 10, 26, 10]);
     const photo = await fetch(base + '/assets/plants/plant-12.jpg');
     assert.equal(photo.status, 200);
     assert.equal(photo.headers.get('content-type'), 'image/jpeg');

@@ -6,6 +6,8 @@ Las cartas y los mensajes de bienvenida y cierre conservan la estética retro de
 
 La bienvenida y el cierre se presentan como conversaciones con Barto en una playa pixelada. El texto aparece progresivamente; tocar el cuadro o el botón completa la frase y el siguiente toque avanza. La preferencia del dispositivo de reducir movimiento muestra cada frase de inmediato.
 
+La bienvenida dura dos mensajes y usa el fondo `assets/Playa.png`. El cierre conserva el paisaje de Bogotá. Incluye también `assets/icon.ico`: el servidor lo publica como `/favicon.ico` para el ícono de la pestaña del navegador.
+
 ## Qué garantiza el sorteo
 
 - Hay una sola asignación compartida por todos los celulares.
