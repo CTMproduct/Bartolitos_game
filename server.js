@@ -33,10 +33,10 @@ export function createApp({ pool, participants, html }) {
         const icon = await readFile(new URL('./assets/icon.ico', import.meta.url));
         response.writeHead(200, { 'Content-Type': 'image/x-icon', 'Cache-Control': 'public, max-age=86400' });
         response.end(icon);
-      } else if (request.method === 'GET' && path === '/assets/Playa.png') {
-        const background = await readFile(new URL('./assets/Playa.png', import.meta.url));
+      } else if (request.method === 'GET' && /^\/assets\/(?:fodo-playa|fondo-bogota|personaje-playa|personaje-bogota)\.png$/.test(path)) {
+        const image = await readFile(new URL('.' + path, import.meta.url));
         response.writeHead(200, { 'Content-Type': 'image/png', 'Cache-Control': 'public, max-age=86400' });
-        response.end(background);
+        response.end(image);
       } else if (request.method === 'GET' && /^\/assets\/plants\/(?:plant-(?:[0-9]|1[0-2])\.jpg|credits\.json)$/.test(path)) {
         let asset;
         try {
