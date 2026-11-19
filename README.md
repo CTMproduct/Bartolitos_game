@@ -1,4 +1,4 @@
-# Bartolitos en Railway
+# Bartilinos en Railway
 
 La web ahora requiere el servidor Node.js y PostgreSQL. Abrir el HTML directamente ya no genera sorteos locales. La página principal puede llamarse `index.html`, `Bartolitos.html` o `Bartolitos (1).html`; el servidor busca en ese orden. Debe estar junto a `server.js` y `participants.json`.
 

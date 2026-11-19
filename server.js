@@ -93,7 +93,7 @@ async function start() {
     throw error;
   }
   const server = createApp({ pool, participants, html });
-  server.listen(Number(process.env.PORT || 3000), '0.0.0.0', () => console.log('Bartolitos listo; sorteo compartido en PostgreSQL.'));
+  server.listen(Number(process.env.PORT || 3000), '0.0.0.0', () => console.log('Bartilinos listo; sorteo compartido en PostgreSQL.'));
   for (const signal of ['SIGINT', 'SIGTERM']) process.once(signal, () => {
     server.close(async () => { await pool.end(); process.exit(0); });
     setTimeout(() => process.exit(1), 10000).unref();
@@ -102,7 +102,7 @@ async function start() {
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
   start().catch(error => {
-    console.error(`No se pudo iniciar Bartolitos: ${describeStartupError(error)}`);
+    console.error(`No se pudo iniciar Bartilinos: ${describeStartupError(error)}`);
     process.exitCode = 1;
   });
 }

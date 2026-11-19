@@ -8,7 +8,7 @@ function errorCode(error) {
 }
 
 const messages = {
-  MISSING_DATABASE_URL: 'Falta DATABASE_URL en Variables del servicio Bartolitos_game. Añade una referencia a DATABASE_URL de Postgres.',
+  MISSING_DATABASE_URL: 'Falta DATABASE_URL en Variables del servicio del juego. Añade una referencia a DATABASE_URL de Postgres.',
   INVALID_DATABASE_URL: 'DATABASE_URL no es una URL PostgreSQL válida. Vuelve a crear la referencia desde el servicio Postgres.',
   ECONNREFUSED: 'PostgreSQL rechazó la conexión. Comprueba que el servicio Postgres esté en línea y que DATABASE_URL apunte a ese servicio.',
   ENOTFOUND: 'No se encontró el servidor PostgreSQL. Comprueba la referencia DATABASE_URL y que ambos servicios estén en el mismo proyecto y entorno.',
